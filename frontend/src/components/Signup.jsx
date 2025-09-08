@@ -1,0 +1,70 @@
+import React, { useState } from "react";
+import "../styles/Auth.css";
+import { signup, login, getMe } from "../services/api";
+
+const Signup = ({ onClose = () => {}, switchToLogin = () => {}, onSignupSuccess = () => {} }) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [avatar, setAvatar] = useState(null);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("email", email);
+      formData.append("password", password);
+      if (avatar) formData.append("avatar", avatar);
+
+      await signup(formData);
+
+      await login(email, password);
+      const userData = await getMe();
+
+      onSignupSuccess(userData);
+      onClose();
+    } catch (err) {
+      setError(err.response?.data?.detail || "Signup failed");
+    }
+  };
+
+  return (
+    <div className="auth-box">
+      <button type="button" className="close-btn" onClick={onClose}>✖</button>
+
+      <h2>Create Account</h2>
+      <p className="subtitle">Join contentsAI to start generating your contents.</p>
+
+      {error && <p className="error">{error}</p>}
+
+      <form onSubmit={handleSubmit}>
+        <label>Full Name</label>
+        <input type="text" placeholder="Enter your name" required value={name} onChange={(e) => setName(e.target.value)} />
+
+        <label>Email</label>
+        <input type="email" placeholder="Enter your email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+
+        <label>Password</label>
+        <input type="password" placeholder="Enter your password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+
+        <label>Profile Picture (optional)</label>
+        <input type="file" accept="image/*" onChange={(e) => setAvatar(e.target.files[0])} />
+
+        <button type="submit" className="auth-btn">Create Account</button>
+      </form>
+
+      <p className="link">
+        Already have an account?{" "}
+        <span className="switch-link" onClick={switchToLogin}>
+          Sign In
+        </span>
+      </p>
+    </div>
+  );
+};
+
+export default Signup;

@@ -1,0 +1,46 @@
+# ------ FastAPI & ASGI Server ------
+
+fastapi
+uvicorn[standard]
+
+
+# ------ Authentication & Security ------
+
+passlib[bcrypt]
+bcrypt
+python-jose[cryptography]
+python-multipart
+email-validator
+
+
+# ------ Database (MongoDB) ------
+
+motor
+pymongo
+pydantic
+
+
+# ------ OpenAI & AI Helpers ------
+
+openai
+langchain
+tiktoken
+sentence-transformers
+
+
+# ------ Vector Databases ------
+
+pinecone-client
+
+
+# ------ HTML & Text Processing ------
+
+beautifulsoup4
+lxml
+
+
+# ------ Utilities ------
+
+python-dotenv
+requests
+httpx

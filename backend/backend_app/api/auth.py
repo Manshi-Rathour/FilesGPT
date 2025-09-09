@@ -7,15 +7,15 @@ from fastapi.security import OAuth2PasswordRequestForm
 import cloudinary
 import cloudinary.uploader
 
-from backend_app.core.config import settings
-from backend_app.core.auth import (
+from backend.backend_app.core.config import settings
+from backend.backend_app.core.auth import (
     create_access_token,
     get_current_user,
     hash_password,
     verify_password,
 )
-from backend_app.db.mongodb import users_col
-from backend_app.db.models import (
+from backend.backend_app.db.mongodb import users_col
+from backend.backend_app.db.models import (
     UserCreate, UserLogin, UserPublic, Token, ProfileUpdate
 )
 
@@ -56,7 +56,7 @@ async def signup(
         try:
             up = cloudinary.uploader.upload(
                 avatar.file,
-                folder="contentsAI/users",
+                folder="pdfGpt/users",
                 resource_type="image",
                 use_filename=True,
                 unique_filename=True,
@@ -110,7 +110,7 @@ async def update_me(
         try:
             up = cloudinary.uploader.upload(
                 new_avatar.file,
-                folder="contentsAI/users",
+                folder="pdfGpt/users",
                 resource_type="image",
                 use_filename=True,
                 unique_filename=True,

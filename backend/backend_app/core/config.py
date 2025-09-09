@@ -4,11 +4,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings:
-    PROJECT_NAME: str = os.getenv("PROJECT_NAME", "contentsAI")
+    PROJECT_NAME: str = os.getenv("PROJECT_NAME", "pdfGpt")
 
     # Mongo
     MONGO_URI: str = os.getenv("MONGO_URI", "")
-    MONGO_DB_NAME: str = os.getenv("MONGO_DB_NAME", "contentsAI")
+    MONGO_DB_NAME: str = os.getenv("MONGO_DB_NAME", "pdfGpt")
 
     # JWT
     JWT_SECRET: str = os.getenv("JWT_SECRET", "change-me")

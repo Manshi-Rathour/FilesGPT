@@ -13,6 +13,11 @@ python-multipart
 email-validator
 
 
+# ------ Cloud & File Storage ------
+
+cloudinary
+
+
 # ------ Database (MongoDB) ------
 
 motor

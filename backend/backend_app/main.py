@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import project settings and routers
-from backend.backend_app.core.config import settings
-from backend.backend_app.api.auth import router as auth_router
+from .core.config import settings
+from .api.auth import router as auth_router
 
 # Initialize FastAPI app
 app = FastAPI(title=settings.PROJECT_NAME)

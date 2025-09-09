@@ -7,15 +7,15 @@ from fastapi.security import OAuth2PasswordRequestForm
 import cloudinary
 import cloudinary.uploader
 
-from backend.backend_app.core.config import settings
-from backend.backend_app.core.auth import (
+from ..core.config import settings
+from ..core.auth import (
     create_access_token,
     get_current_user,
     hash_password,
     verify_password,
 )
-from backend.backend_app.db.mongodb import users_col
-from backend.backend_app.db.models import (
+from ..db.mongodb import users_col
+from ..db.models import (
     UserCreate, UserLogin, UserPublic, Token, ProfileUpdate
 )
 

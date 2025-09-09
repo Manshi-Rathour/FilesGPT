@@ -37,7 +37,6 @@ const Signup = ({ onClose = () => {}, switchToLogin = () => {}, onSignupSuccess 
       <button type="button" className="close-btn" onClick={onClose}>✖</button>
 
       <h2>Create Account</h2>
-      <p className="subtitle">Join contentsAI to start generating your contents.</p>
 
       {error && <p className="error">{error}</p>}
 

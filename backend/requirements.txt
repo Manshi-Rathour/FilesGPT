@@ -20,10 +20,10 @@ cloudinary
 
 # ------ Database (MongoDB) ------
 
+fitz
 motor
 pymongo
 pydantic
-
 
 # ------ OpenAI & AI Helpers ------
 
@@ -35,8 +35,9 @@ sentence-transformers
 
 # ------ Vector Databases ------
 
+pinecone
 pinecone-client
-
+langchain_openai
 
 # ------ HTML & Text Processing ------
 

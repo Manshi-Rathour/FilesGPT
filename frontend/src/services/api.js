@@ -51,3 +51,28 @@ export const deleteAccount = async () => {
   await API.delete("/auth/me");
   localStorage.removeItem("token");
 };
+
+// ---------- PDF Upload ----------
+export const uploadPDF = async (file, url, userId) => {
+  const formData = new FormData();
+  if (file) formData.append("file", file);
+  if (url) formData.append("url", url);
+  if (userId) formData.append("user_id", userId);
+
+  const res = await API.post("/pdf/upload/", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+};
+
+// ---------- Query PDF ----------
+export const queryPDF = async (question, topK = 5) => {
+  const res = await API.post("/query/", { question, top_k: topK });
+  return res.data;
+};
+
+// ---------- Fetch User History ----------
+export const fetchHistory = async (userId) => {
+  const res = await API.get(`/history/${userId}`);
+  return res.data;
+};

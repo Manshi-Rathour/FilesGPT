@@ -20,7 +20,7 @@ cloudinary
 
 # ------ Database (MongoDB) ------
 
-fitz
+pymupdf
 motor
 pymongo
 pydantic

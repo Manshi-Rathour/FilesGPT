@@ -1,29 +1,35 @@
 import os
-import math
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
-import pinecone
+from pinecone import Pinecone, ServerlessSpec
 from ..core.config import settings
 from typing import List, Dict
-
-# Initialize device for sentence-transformers
 import torch
+
+# --- Initialize device for sentence-transformers ---
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
-# Load embedder once (module-level)
-EMBEDDER_MODEL = "intfloat/e5-large-v2"  # matches your working code
+# --- Load embedder once (module-level) ---
+EMBEDDER_MODEL = "intfloat/e5-large-v2"
 print(f"Loading embedding model {EMBEDDER_MODEL} on device {device}...")
 embedder = SentenceTransformer(EMBEDDER_MODEL, device=device)
 EMBEDDINGS_DIM = embedder.get_sentence_embedding_dimension()
 print(f"Embedder ready. Dimension = {EMBEDDINGS_DIM}")
 
-# Initialize Pinecone
-pinecone.init(api_key=settings.PINECONE_API_KEY, environment=settings.PINECONE_ENV)
-# Ensure index exists (idempotent)
-if settings.PINECONE_INDEX not in pinecone.list_indexes():
+# --- Initialize Pinecone v3 client ---
+pc = Pinecone(api_key=settings.PINECONE_API_KEY)
+
+# Ensure index exists
+if settings.PINECONE_INDEX not in pc.list_indexes().names():
     print(f"Creating Pinecone index {settings.PINECONE_INDEX} (dim={EMBEDDINGS_DIM})")
-    pinecone.create_index(name=settings.PINECONE_INDEX, dimension=EMBEDDINGS_DIM, metric="cosine")
-index = pinecone.Index(settings.PINECONE_INDEX)
+    pc.create_index(
+        name=settings.PINECONE_INDEX,
+        dimension=EMBEDDINGS_DIM,
+        metric="cosine",
+        spec=ServerlessSpec(cloud="aws", region="us-east-1")  # adjust region if needed
+    )
+
+index = pc.Index(settings.PINECONE_INDEX)
 
 
 def chunk_text_to_chunks(text: str, source: str, user_id: str) -> List[Dict]:
@@ -66,12 +72,12 @@ def embed_and_upsert(chunks: List[Dict], batch_size: int = 64):
         upsert_items = []
         for c, vec in zip(batch, vectors):
             upsert_items.append((c["id"], vec.tolist(), c["metadata"]))
-        # upsert to pinecone
+        # Upsert to Pinecone
         index.upsert(vectors=upsert_items)
-        print(f"Upserted {len(upsert_items)} vectors (batch {start//batch_size + 1})")
+        print(f"Upserted {len(upsert_items)} vectors (batch {start // batch_size + 1})")
 
 
-def process_and_store(text: str, user_id: str, source: str):
+def process_and_store(text: str, user_id: str, source: str) -> int:
     """
     Full pipeline: chunk text, embed, and upsert to Pinecone.
     Returns number of chunks upserted.

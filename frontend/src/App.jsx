@@ -18,7 +18,6 @@ function App() {
   return (
     <div className="App">
       <Navbar />
-      <div style={{ marginTop: '80px' }}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/how-to-use" element={<HowToUsePage />} />
@@ -30,7 +29,6 @@ function App() {
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/profile" element={<ProfileSettings />} />
         </Routes>
-      </div>
     </div>
   );
 }

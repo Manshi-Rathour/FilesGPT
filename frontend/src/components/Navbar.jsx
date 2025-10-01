@@ -66,7 +66,7 @@ const Navbar = () => {
                 window.scrollTo(0, 0);
               }}
             >
-              PDF Assistant
+              FilesGPT
             </Link>
           </div>
 

@@ -5,8 +5,8 @@ from .core.config import settings
 from .api.auth import router as auth_router
 from .api.pdf import router as pdf_router
 from .api.query import router as query_router
-from .api.history import router as history_router
-# from .api.feedback import router as feedback_router
+from .api.history import router as history_router          # for viewing history
+from .api.save_history import router as save_history_router  # ✅ for saving history
 
 # Initialize FastAPI app
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -24,8 +24,8 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(pdf_router)
 app.include_router(query_router)
-app.include_router(history_router)
-# app.include_router(feedback_router)
+app.include_router(history_router)         # GET /history endpoints
+app.include_router(save_history_router)    # POST /chat/save/ endpoint
 
 # Health check endpoint
 @app.get("/health")

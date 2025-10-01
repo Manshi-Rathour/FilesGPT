@@ -11,7 +11,8 @@ body {
   top: 0;
   left: 0;
   z-index: 2000;
-  border-bottom: 1px solid #ddd;
+  /* border-bottom: 1px solid #bebebe; */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   animation: slideDown 0.8s ease-out forwards;
 }
 

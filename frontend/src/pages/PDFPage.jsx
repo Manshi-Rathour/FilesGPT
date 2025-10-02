@@ -26,10 +26,14 @@ export default function PDFPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("user_id", "anonymous");
+      // ✅ get JWT token from localStorage (assuming you store it after login)
+      const token = localStorage.getItem("token");
 
       const response = await axios.post("http://127.0.0.1:5000/pdf/upload/", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { 
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`, // ✅ attach JWT
+        },
       });
 
       setLoading(false);
@@ -37,7 +41,7 @@ export default function PDFPage() {
       setDone(true);
     } catch (error) {
       setLoading(false);
-      setMessage("Error processing PDF: " + error?.response?.data?.detail || error.message);
+      setMessage("Error processing PDF: " + (error?.response?.data?.detail || error.message));
     }
   };
 
@@ -57,7 +61,6 @@ export default function PDFPage() {
           </span>
           <input type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
         </label>
-
 
         {!done && (
           <button

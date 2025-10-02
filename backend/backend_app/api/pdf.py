@@ -1,10 +1,12 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 import os, shutil, uuid
-from ..rag_pipeline.pdf_loader import download_file_from_url, extract_text_from_url_maybe_html, extract_text_from_pdf
+from ..rag_pipeline.pdf_loader import download_file_from_url, extract_text_from_url_maybe_html
 from ..rag_pipeline.prepare_dataset import process_and_store
 from ..core.config import settings
+from ..core.auth import get_current_user
 from pymongo import MongoClient
 from datetime import datetime
+from bson import ObjectId
 
 router = APIRouter(prefix="/pdf", tags=["PDF"])
 
@@ -19,11 +21,12 @@ def get_mongo_client():
 UPLOAD_DIR = "backend_app/rag_pipeline/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+
 @router.post("/upload/")
 async def upload_pdf(
     file: UploadFile = File(None),
     url: str = Form(None),
-    user_id: str = Form("anonymous")
+    current_user: dict = Depends(get_current_user)   # ✅ pull real user
 ):
     """
     Accept either a PDF file upload or a URL (pointing to PDF or HTML).
@@ -43,7 +46,6 @@ async def upload_pdf(
             content_type = "application/pdf"  # trust upload
             source = file.filename
         else:
-            # download url
             parsed_name = os.path.basename(url.split("?")[0]) or f"downloaded_{uuid.uuid4().hex}.pdf"
             filename = f"{uuid.uuid4().hex}_{parsed_name}"
             file_path = os.path.join(UPLOAD_DIR, filename)
@@ -57,14 +59,15 @@ async def upload_pdf(
             raise HTTPException(status_code=400, detail="No text could be extracted from the provided file/URL")
 
         # Process: chunk + embed + upsert to Pinecone
-        chunk_count = process_and_store(text, user_id=user_id, source=source)
+        chunk_count = process_and_store(text, user_id=str(current_user["_id"]), source=source)
 
         # Log upload metadata to MongoDB
         client = get_mongo_client()
         db = client[settings.MONGO_DB_NAME]
         uploads = db["uploads"]
         uploads.insert_one({
-            "user_id": user_id,
+            "user_id": ObjectId(current_user["_id"]),   # ✅ ObjectId like in chat
+            "email": current_user["email"],
             "filename": source,
             "stored_as": file_path,
             "chunks_upserted": chunk_count,

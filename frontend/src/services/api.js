@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://127.0.0.1:5000", // FastAPI backend
+  baseURL: "http://127.0.0.1:5000",
+  withCredentials: true, // ✅ important for CORS + auth
 });
 
 // Attach token if available
@@ -36,9 +37,10 @@ export const login = async (email, password) => {
 };
 
 export const getMe = async () => {
-  const res = await API.get("/auth/me");
+  const res = await API.get("/auth/me", { withCredentials: true });
   return res.data;
 };
+
 
 export const updateProfile = async (formData) => {
   const res = await API.put("/auth/me", formData, {
@@ -73,6 +75,7 @@ export const queryPDF = async (question, topK = 5) => {
 
 // ---------- Fetch User History ----------
 export const fetchHistory = async (userId) => {
-  const res = await API.get(`/history/${userId}`);
+  const res = await API.get(`/history/${userId}`, { withCredentials: true });
   return res.data;
 };
+

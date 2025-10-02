@@ -1,20 +1,29 @@
 import React, { useState } from "react";
 import "../styles/Auth.css";
 import { login, getMe } from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 const Login = ({ onClose = () => {}, switchToSignup = () => {}, onLoginSuccess = () => {} }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      await login(email, password);
+      const res = await login(email, password);
+      localStorage.setItem("token", res.access_token); // <-- save token
+
+      // Navigate to mediator page
+      navigate("/user-loading");
+
+      // Optional: fetch user data immediately (can also be done in LoadingUserPage)
       const userData = await getMe();
       onLoginSuccess(userData);
+
       onClose();
     } catch (err) {
       setError(err.response?.data?.detail || "Login failed");

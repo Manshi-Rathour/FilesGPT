@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "../styles/Auth.css";
 import { signup, login, getMe } from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 const Signup = ({ onClose = () => {}, switchToLogin = () => {}, onSignupSuccess = () => {} }) => {
   const [name, setName] = useState("");
@@ -8,6 +9,7 @@ const Signup = ({ onClose = () => {}, switchToLogin = () => {}, onSignupSuccess 
   const [password, setPassword] = useState("");
   const [avatar, setAvatar] = useState(null);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,10 +24,16 @@ const Signup = ({ onClose = () => {}, switchToLogin = () => {}, onSignupSuccess 
 
       await signup(formData);
 
-      await login(email, password);
-      const userData = await getMe();
+      // Automatically login after signup
+      const res = await login(email, password);
+      localStorage.setItem("token", res.access_token); // <-- save token
 
+      // Navigate to mediator page
+      navigate("/user-loading");
+
+      const userData = await getMe();
       onSignupSuccess(userData);
+
       onClose();
     } catch (err) {
       setError(err.response?.data?.detail || "Signup failed");

@@ -55,23 +55,26 @@ export default function ChatPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Save chat to backend and go home
+  // Save chat to backend with PDF name and go home
   const saveAndGoHome = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) return;
+
       await axios.post(
         "http://127.0.0.1:5000/chat/save/",
-        { messages },
+        {
+          pdf_name: pdfName,     // ✅ Save PDF name
+          messages: messages,    // Chat messages
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
     } catch (error) {
       console.error("Failed to save chat:", error);
     } finally {
       navigate("/home");
     }
   };
-
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 p-6 pt-[100px]">
@@ -95,10 +98,11 @@ export default function ChatPage() {
         />
         <button
           onClick={handleSend}
-          className={`px-6 py-2 rounded-xl text-white transition ${loading
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-indigo-500 hover:bg-indigo-600"
-            }`}
+          className={`px-6 py-2 rounded-xl text-white transition ${
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-indigo-500 hover:bg-indigo-600"
+          }`}
           disabled={loading}
         >
           {loading ? "Thinking..." : "Send"}

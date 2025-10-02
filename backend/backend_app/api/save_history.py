@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from datetime import datetime
-from ..core.config import settings
+from bson import ObjectId
 from pymongo import MongoClient
+from ..core.config import settings
 from ..core.auth import get_current_user
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
@@ -17,29 +18,38 @@ def get_mongo_client():
 
 # Request model
 class SaveHistoryRequest(BaseModel):
-    messages: list  # [{sender: "user"/"bot", text: "..."}]
+    pdf_name: str
+    messages: list  # list of {sender, text}
 
 @router.post("/save/")
 async def save_chat_history(
     request: SaveHistoryRequest,
     current_user: dict = Depends(get_current_user)
 ):
+    """
+    Save chat messages to MongoDB, storing user_id as ObjectId.
+    """
     try:
-        # print("DEBUG - current_user:", current_user)
-        # print("DEBUG - messages:", request.messages)
-
         client = get_mongo_client()
         db = client[settings.MONGO_DB_NAME]
         history_col = db["history"]
 
-        history_col.insert_one({
-            "user_id": str(current_user["_id"]),
+        history_doc = {
+            "user_id": ObjectId(current_user["_id"]),  # store as ObjectId
             "email": current_user["email"],
+            "pdf_name": request.pdf_name,
             "messages": request.messages,
             "created_at": datetime.utcnow()
-        })
+        }
 
-        return {"status": "success", "message": "Chat history saved"}
+        result = history_col.insert_one(history_doc)
+
+        return {
+            "status": "success",
+            "message": "Chat history saved",
+            "chat_id": str(result.inserted_id)
+        }
+
     except Exception as e:
         print("DEBUG - error:", e)
         raise HTTPException(status_code=500, detail=str(e))

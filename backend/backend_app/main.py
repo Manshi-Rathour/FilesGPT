@@ -14,11 +14,16 @@ app = FastAPI(title=settings.PROJECT_NAME)
 # CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.CLIENT_URL, "http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[
+        settings.CLIENT_URL,        # your production frontend URL
+        "http://localhost:5173",    # local dev frontend
+        "http://127.0.0.1:5173",    # sometimes axios uses 127.0.0.1
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],          # allow GET, POST, PUT, DELETE etc.
+    allow_headers=["*"],          # allow all headers (Authorization, Content-Type)
 )
+
 
 # Register routers
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])

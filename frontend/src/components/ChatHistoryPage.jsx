@@ -1,13 +1,15 @@
-// ChatHistoryPage.jsx
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom"; 
+import ChatMessage from "../components/ChatMessage";
 import axios from "axios";
 
 export default function ChatHistoryPage() {
+  const navigate = useNavigate();
   const { chatId } = useParams();
   const [messages, setMessages] = useState([]);
+  const [pdfName, setPdfName] = useState("your PDF");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const chatEndRef = useRef(null);
 
   useEffect(() => {
     if (!chatId) return;
@@ -23,12 +25,13 @@ export default function ChatHistoryPage() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        // Normalize messages
+        console.log("[DEBUG] Chat response:", response.data);
         setMessages(response.data.messages || []);
+        setPdfName(response.data.pdf_name || "your PDF");
         setLoading(false);
       } catch (err) {
         console.error("[ERROR] Failed to fetch chat:", err);
-        setError("Failed to load chat history");
+        setMessages([{ sender: "bot", text: "Failed to load chat history." }]);
         setLoading(false);
       }
     };
@@ -36,24 +39,30 @@ export default function ChatHistoryPage() {
     fetchChat();
   }, [chatId]);
 
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   if (loading) return <div className="p-6">Loading chat...</div>;
-  if (error) return <div className="p-6 text-red-500">{error}</div>;
 
   return (
-    <div className="p-6">
-      <h2 className="font-bold text-xl mb-4">Chat History</h2>
-      <div className="flex flex-col gap-2">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`p-3 rounded-lg ${
-              msg.sender === "user" ? "bg-indigo-100 self-end" : "bg-gray-100 self-start"
-            }`}
-          >
-            <p>{msg.text}</p>
-          </div>
+    <div className="flex flex-col h-screen bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 p-6 pt-[100px]">
+      {/* Chat Box */}
+      <div className="flex-1 bg-white rounded-xl shadow flex flex-col p-4 overflow-y-auto max-h-[70vh]">
+        <h2 className="font-bold text-xl mb-4">{pdfName}</h2>
+        {messages.map((m, idx) => (
+          <ChatMessage key={idx} sender={m.sender} text={m.text} />
         ))}
+        <div ref={chatEndRef}></div>
       </div>
+
+      {/* Go Home Button */}
+      <button
+        onClick={() => navigate("/home")}
+        className="mt-4 w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition"
+      >
+        Go to Home Page
+      </button>
     </div>
   );
 }

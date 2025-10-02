@@ -10,40 +10,58 @@ export default function Home({ user }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-  if (!user?._id) return;
+    if (!user?._id) return;
 
-  const fetchChatHistory = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found");
+    const fetchChatHistory = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No token found");
 
-      const response = await axios.get(
-        `http://127.0.0.1:5000/history/user/${user._id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        const response = await axios.get(
+          `http://127.0.0.1:5000/history/user/${user._id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      const chats = response.data.map((chat, index) => ({
-        ...chat,
-        _id: chat._id?.$oid || chat._id || index,
-        title:
-          chat.pdf_name ||
-          (chat.messages?.[0]?.text
-            ? chat.messages[0].text.substring(0, 30) + "..."
-            : "Untitled Chat"),
-      }));
+        console.log("RAW RESPONSE from backend:", response.data);
 
-      setChatHistory(chats);
-      setLoading(false);
-    } catch (err) {
-      console.error("[ERROR] Failed to fetch chat history:", err);
-      setError("Failed to fetch chat history");
-      setLoading(false);
-    }
-  };
+        if (!Array.isArray(response.data)) {
+          throw new Error("Unexpected response format, expected array");
+        }
 
-  fetchChatHistory();
-}, [user]);
+        // Check keys in first object
+        if (response.data.length > 0) {
+          console.log(
+            "Keys in first chat object:",
+            Object.keys(response.data[0])
+          );
+        }
 
+        // Normalize backend data
+        const chats = response.data.map(chat => {
+          console.log("Keys in first chat object:", Object.keys(chat));
+          return {
+            _id: chat._id,
+            user_id: chat.user_id,
+            pdf_name: chat.pdf_name,
+            messages: chat.messages || [],
+            created_at: chat.created_at,
+            title: chat.pdf_name || (chat.messages?.[0]?.text?.substring(0, 30) + "...")
+          };
+        });
+        console.log("✅ All normalized chats:", chats);
+
+
+        setChatHistory(chats);
+        setLoading(false);
+      } catch (err) {
+        console.error("[ERROR] Failed to fetch chat history:", err);
+        setError("Failed to fetch chat history");
+        setLoading(false);
+      }
+    };
+
+    fetchChatHistory();
+  }, [user]);
 
   return (
     <div className="h-screen bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 pt-[80px] px-6 pb-6">
@@ -68,7 +86,9 @@ export default function Home({ user }) {
                   onClick={() => navigate(`/chat-history/${chat._id}`)}
                   className="cursor-pointer bg-gray-100 p-3 rounded-lg hover:bg-gray-200 transition flex flex-col"
                 >
-                  <p className="font-medium text-gray-700 truncate">{chat.title}</p>
+                  <p className="font-medium text-gray-700 truncate">
+                    {chat.title}
+                  </p>
                   <p className="text-xs text-gray-400 mt-1">
                     {chat.created_at
                       ? new Date(chat.created_at).toLocaleString()

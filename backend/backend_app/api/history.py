@@ -3,7 +3,7 @@ from pymongo import MongoClient
 from typing import List, Optional
 from datetime import datetime
 from bson import ObjectId
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from ..core.config import settings
 import traceback
 
@@ -15,12 +15,15 @@ class Message(BaseModel):
     text: str
 
 class ChatHistory(BaseModel):
-    _id: str
+    id: str = Field(..., alias="_id")
     user_id: str
     email: Optional[str] = None
     pdf_name: Optional[str] = None
     messages: List[Message] = []
     created_at: str
+
+    class Config:
+        allow_population_by_field_name = True
 
 # ---------- Mongo Client ----------
 _mongo_client_h = None
@@ -48,15 +51,26 @@ async def get_user_chats(user_id: str, limit: int = 50):
             .limit(limit)
         )
 
+        # Normalize for frontend
+        normalized = []
         for d in docs:
-            d["_id"] = str(d["_id"])
-            d["user_id"] = str(d["user_id"])
-            d["created_at"] = d.get("created_at").isoformat() if isinstance(d.get("created_at"), datetime) else str(d.get("created_at", ""))
+            normalized.append({
+                "_id": str(d["_id"]),
+                "user_id": str(d["user_id"]),
+                "email": d.get("email", ""),
+                "pdf_name": d.get("pdf_name", ""),
+                "messages": d.get("messages", []),
+                "created_at": d["created_at"].isoformat() if isinstance(d.get("created_at"), datetime) else str(
+                    d.get("created_at", ""))
+            })
 
-        return docs
+        print("[DEBUG] Normalized docs before return:", normalized)
+        return normalized
+
     except Exception:
         print("[ERROR] Exception in get_user_chats:", traceback.format_exc())
-        return []
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
 
 @router.get("/{chat_id}", response_model=ChatHistory)
 async def get_chat(chat_id: str):
@@ -72,11 +86,19 @@ async def get_chat(chat_id: str):
         if not doc:
             raise HTTPException(status_code=404, detail="Chat not found")
 
-        doc["_id"] = str(doc["_id"])
-        doc["user_id"] = str(doc["user_id"])
-        doc["created_at"] = doc.get("created_at").isoformat() if isinstance(doc.get("created_at"), datetime) else str(doc.get("created_at", ""))
+        # Normalize single chat for frontend
+        normalized = {
+            "_id": str(doc["_id"]),
+            "user_id": str(doc.get("user_id", "")),
+            "email": doc.get("email", ""),
+            "pdf_name": doc.get("pdf_name", ""),
+            "messages": doc.get("messages", []),
+            "created_at": doc.get("created_at").isoformat() if isinstance(doc.get("created_at"), datetime) else str(doc.get("created_at", ""))
+        }
 
-        return doc
+        print("[DEBUG] Normalized single chat:", normalized)
+        return normalized
+
     except HTTPException:
         raise
     except Exception:

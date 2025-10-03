@@ -16,7 +16,7 @@ export default function LoadingUserPage({ setUser, setIsLoggedIn }) {
 
       try {
         const u = await getMe();
-        setUser({ ...u, _id: u._id || u.id }); // normalize _id
+        setUser({ ...u, _id: u._id || u.id });
         setIsLoggedIn(true);
         navigate("/home"); // go to home only when user is ready
       } catch (err) {
@@ -32,7 +32,7 @@ export default function LoadingUserPage({ setUser, setIsLoggedIn }) {
   }, [setUser, setIsLoggedIn, navigate]);
 
   return (
-    <div className="flex items-center justify-center h-screen bg-black">
+    <div className="fflex flex-col items-center justify-center h-screen bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 p-6 text-center relative">
       <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
     </div>
   );

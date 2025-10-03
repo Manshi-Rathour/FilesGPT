@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; 
+import { useNavigate, useLocation } from "react-router-dom";
 import ChatMessage from "../components/ChatMessage";
 import axios from "axios";
 
@@ -7,6 +7,7 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const pdfName = location.state?.pdfName || "your PDF";
+  const documentId = location.state?.documentId;
 
   const [messages, setMessages] = useState([
     { sender: "bot", text: `Ask your query related to "${pdfName}".` },
@@ -19,18 +20,16 @@ export default function ChatPage() {
     if (!input.trim()) return;
 
     const userMessage = input;
-    setMessages([...messages, { sender: "user", text: userMessage }]);
+    setMessages((prev) => [...prev, { sender: "user", text: userMessage }]);
     setInput("");
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:5000/query/",
-        {
-          question: userMessage,
-          top_k: 5,
-        }
-      );
+      const response = await axios.post("http://127.0.0.1:5000/query/", {
+        question: userMessage,
+        top_k: 5,
+        document_id: documentId,
+      });
 
       setMessages((prev) => [
         ...prev,
@@ -41,9 +40,7 @@ export default function ChatPage() {
         ...prev,
         {
           sender: "bot",
-          text:
-            "Error: " +
-            (error?.response?.data?.detail || error.message),
+          text: "Error: " + (error?.response?.data?.detail || error.message),
         },
       ]);
     } finally {
@@ -55,7 +52,7 @@ export default function ChatPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Save chat to backend with PDF name and go home
+  // Save chat to DB with PDF metadata
   const saveAndGoHome = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -64,8 +61,9 @@ export default function ChatPage() {
       await axios.post(
         "http://127.0.0.1:5000/chat/save/",
         {
-          pdf_name: pdfName,     // ✅ Save PDF name
-          messages: messages,    // Chat messages
+          pdf_name: pdfName,
+          document_id: documentId,
+          messages: messages,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );

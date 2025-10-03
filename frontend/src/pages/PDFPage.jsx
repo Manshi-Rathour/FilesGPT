@@ -26,24 +26,32 @@ export default function PDFPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      // ✅ get JWT token from localStorage (assuming you store it after login)
       const token = localStorage.getItem("token");
 
       const response = await axios.post("http://127.0.0.1:5000/pdf/upload/", formData, {
-        headers: { 
+        headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`, // ✅ attach JWT
+          Authorization: `Bearer ${token}`,
         },
       });
 
       setLoading(false);
       setMessage(`PDF processed successfully! Chunks: ${response.data.chunks}`);
       setDone(true);
+      
+      navigate("/chat", {
+        state: {
+          pdfName: file?.name,
+          documentId: response.data.document_id
+        }
+      });
+
     } catch (error) {
       setLoading(false);
       setMessage("Error processing PDF: " + (error?.response?.data?.detail || error.message));
     }
   };
+
 
   const goHome = () => navigate("/home");
   const goChat = () => navigate("/chat", { state: { pdfName: file?.name } });
@@ -55,7 +63,7 @@ export default function PDFPage() {
 
         {/* Custom file input */}
         <label className="w-full flex items-center justify-center bg-indigo-500 text-white py-2 rounded-lg cursor-pointer hover:bg-indigo-600 transition">
-          <FileText className="w-4 h-4 mr-2 text-white" /> 
+          <FileText className="w-4 h-4 mr-2 text-white" />
           <span className="text-white">
             {file ? file.name : "Choose PDF"}
           </span>

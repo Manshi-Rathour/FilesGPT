@@ -64,7 +64,7 @@ async def get_user_chats(user_id: str, limit: int = 50):
                     d.get("created_at", ""))
             })
 
-        print("[DEBUG] Normalized docs before return:", normalized)
+        # print("[DEBUG] Normalized docs before return:", normalized)
         return normalized
 
     except Exception:
@@ -96,7 +96,7 @@ async def get_chat(chat_id: str):
             "created_at": doc.get("created_at").isoformat() if isinstance(doc.get("created_at"), datetime) else str(doc.get("created_at", ""))
         }
 
-        print("[DEBUG] Normalized single chat:", normalized)
+        # print("[DEBUG] Normalized single chat:", normalized)
         return normalized
 
     except HTTPException:

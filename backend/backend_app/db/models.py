@@ -26,6 +26,7 @@ class Token(BaseModel):
 
 class ProfileUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=80)
+    password: Optional[str] = Field(None, min_length=6)
     # email updates typically require re-verification; keeping immutable for now
 
 # ------- Internal model shapes for Mongo -------

@@ -1,16 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Login from "../components/Login";
-import Signup from "../components/Signup";
-import "../styles/Navbar.css";
+import Logo from "../assets/logo.png";
 
 const Navbar = ({ isLoggedIn, setIsLoggedIn, user, setUser }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -18,90 +11,82 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn, user, setUser }) => {
     setIsLoggedIn(false);
     setUser(null);
     setShowDropdown(false);
-    navigate("/"); // redirect to landing page
+    navigate("/");
   };
 
   return (
-    <>
-      <nav className={`navbar ${scrolled ? "scrolled" : ""}`}>
-        <div className="navbar-container">
-          {/* Logo */}
-          <div className="navbar-logo">
-            <Link to="/" onClick={() => setIsOpen(false)}>FilesGPT</Link>
-          </div>
+    <nav className="fixed top-0 left-0 w-full z-20 bg-transparent flex justify-between items-center px-4 md:px-8 py-3">
+      {/* Logo */}
+      <div className="flex items-center">
+        <img
+          src={Logo}
+          alt="FilesGPT"
+          className="w-28 md:w-36 cursor-pointer"
+          onClick={() => navigate("/")}
+        />
+      </div>
 
-          {/* Links */}
-          <div className={`navbar-links ${isOpen ? "active" : ""}`}>
-            {!isLoggedIn ? (
-              <>
-                <Link to="/about-us" onClick={() => setIsOpen(false)}>About</Link>
-                <Link to="/how-to-use" onClick={() => setIsOpen(false)}>How To Use</Link>
-                <span onClick={() => setShowLogin(true)} className="nav-link-btn">Login</span>
-                <span onClick={() => setShowSignup(true)} className="nav-link-btn">Sign Up</span>
-              </>
-            ) : (
-              <>
-                <Link to="/home" onClick={() => setIsOpen(false)}>Home</Link>
-                <div className="profile-container">
-                  <div className="profile-icon" onClick={() => setShowDropdown(!showDropdown)}>
-                    {user?.avatar_url ? (
-                      <img src={user.avatar_url} alt="Profile" className="avatar" />
-                    ) : (
-                      <span className="avatar-text">{user?.name?.charAt(0).toUpperCase()}</span>
-                    )}
-                  </div>
+      {/* Right side items */}
+      <div className="flex items-center space-x-4 md:space-x-6">
+        {!isLoggedIn ? (
+          <button
+            onClick={() => navigate("/login")}
+            className="bg-gradient-to-r from-purple-800 via-blue-900 to-sky-500 hover:from-indigo-500 hover:to-purple-500 text-white px-5 py-2 rounded-2xl shadow-md transition text-sm md:text-base"
+          >
+            Login / Sign Up
+          </button>
+        ) : (
+          <div className="flex items-center space-x-4 md:space-x-6 relative">
+            <Link
+              to="/home"
+              className="text-white font-medium text-sm md:text-base relative transition duration-300 after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-blue-500 after:transition-all after:duration-300 hover:after:w-full"
+            >
+              Dashboard
+            </Link>
 
-                  {showDropdown && (
-                    <div className="dropdown-menu">
-                      <span className="dropdown-item" onClick={() => { navigate("/profile"); setShowDropdown(false); }}>
-                        Profile Settings
-                      </span>
-                      <span className="dropdown-item" onClick={handleLogout}>
-                        Sign Out
-                      </span>
-                    </div>
-                  )}
+            {/* Avatar & Dropdown */}
+            <div className="relative">
+              <div
+                className="w-8 md:w-10 h-8 md:h-10 rounded-full bg-white text-blue-600 flex items-center justify-center cursor-pointer font-semibold border border-blue-500 hover:bg-blue-600 hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
+                onClick={() => setShowDropdown(!showDropdown)}
+              >
+                {user?.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt="Profile"
+                    className="w-8 md:w-10 h-8 md:h-10 rounded-full object-cover border border-blue-500"
+                  />
+                ) : (
+                  <span className="text-sm md:text-base">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+
+              {showDropdown && (
+                <div className="absolute right-0 mt-3 w-40 md:w-44 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                  <span
+                    onClick={() => {
+                      navigate("/profile");
+                      setShowDropdown(false);
+                    }}
+                    className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer rounded-md"
+                  >
+                    Profile Settings
+                  </span>
+                  <span
+                    onClick={handleLogout}
+                    className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer rounded-md"
+                  >
+                    Sign Out
+                  </span>
                 </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
-
-          {/* Hamburger */}
-          <div className="menu-toggle" onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <span className="close-icon">✖</span> : <>
-              <div className="bar"></div>
-              <div className="bar"></div>
-              <div className="bar"></div>
-            </>}
-          </div>
-        </div>
-      </nav>
-
-      {/* Modals */}
-      {showLogin && (
-        <div className="modal-overlay" onClick={() => setShowLogin(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <Login
-              onClose={() => setShowLogin(false)}
-              switchToSignup={() => { setShowLogin(false); setShowSignup(true); }}
-              onLoginSuccess={(userData) => { setUser(userData); setIsLoggedIn(true); setShowLogin(false); navigate("/home"); }}
-            />
-          </div>
-        </div>
-      )}
-
-      {showSignup && (
-        <div className="modal-overlay" onClick={() => setShowSignup(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <Signup
-              onClose={() => setShowSignup(false)}
-              switchToLogin={() => { setShowSignup(false); setShowLogin(true); }}
-              onSignupSuccess={(userData) => { setUser(userData); setIsLoggedIn(true); setShowSignup(false); navigate("/home"); }}
-            />
-          </div>
-        </div>
-      )}
-    </>
+        )}
+      </div>
+    </nav>
   );
 };
 

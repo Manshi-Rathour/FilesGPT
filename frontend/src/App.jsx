@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ChatHistoryPage from "./components/ChatHistoryPage";
 import LoadingUserPage from "./components/LoadingUserPage";
+import Login from "./components/Login";
+import Signup from "./components/Signup";
 
 import LandingPage from "./pages/LandingPage";
-import HowToUsePage from "./pages/HowToUsePage";
-import AboutUsPage from "./pages/AboutUsPage";
 import Home from "./pages/Home";
 import PDFPage from "./pages/PDFPage";
 import ImagePage from "./pages/ImagePage";
@@ -26,14 +26,16 @@ function App() {
     const token = localStorage.getItem("token");
     if (!token) {
       setIsLoggedIn(false);
-      setLoadingUser(false);
     } else {
-      // Show mediator page while fetching user
-      setLoadingUser(false);
+      setIsLoggedIn(true);
     }
+    setLoadingUser(false);
   }, []);
 
-  if (loadingUser) return <LoadingUserPage setUser={setUser} setIsLoggedIn={setIsLoggedIn} />;
+  if (loadingUser)
+    return (
+      <LoadingUserPage setUser={setUser} setIsLoggedIn={setIsLoggedIn} />
+    );
 
   return (
     <div className="App">
@@ -45,17 +47,36 @@ function App() {
       />
 
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/how-to-use" element={<HowToUsePage />} />
-        <Route path="/about-us" element={<AboutUsPage />} />
-
-        {/* Mediator page */}
         <Route
           path="/user-loading"
           element={<LoadingUserPage setUser={setUser} setIsLoggedIn={setIsLoggedIn} />}
         />
+        <Route
+          path="/login"
+          element={
+            <Login
+              onLoginSuccess={(userData) => {
+                setUser(userData);
+                setIsLoggedIn(true);
+              }}
+            />
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <Signup
+              onSignupSuccess={(userData) => {
+                setUser(userData);
+                setIsLoggedIn(true);
+              }}
+            />
+          }
+        />
 
-        {/* Home with ProtectedRoute */}
+        {/* Protected routes */}
         <Route
           path="/home"
           element={
@@ -64,32 +85,56 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/pdf"
-          element={<ProtectedRoute isLoggedIn={isLoggedIn}><PDFPage /></ProtectedRoute>}
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <PDFPage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/image"
-          element={<ProtectedRoute isLoggedIn={isLoggedIn}><ImagePage /></ProtectedRoute>}
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <ImagePage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/website"
-          element={<ProtectedRoute isLoggedIn={isLoggedIn}><WebsitePage /></ProtectedRoute>}
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <WebsitePage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/chat"
-          element={<ProtectedRoute isLoggedIn={isLoggedIn}><ChatPage /></ProtectedRoute>}
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <ChatPage />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/profile"
-          element={<ProtectedRoute isLoggedIn={isLoggedIn}><ProfileSettings /></ProtectedRoute>}
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <ProfileSettings />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/chat-history/:chatId"
-          element={<ProtectedRoute isLoggedIn={isLoggedIn}><ChatHistoryPage /></ProtectedRoute>}
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <ChatHistoryPage />
+            </ProtectedRoute>
+          }
         />
 
+        {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>

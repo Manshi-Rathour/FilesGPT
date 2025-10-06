@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import "../styles/Auth.css";
 import { login, getMe } from "../services/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import Prism from "../Prism";
 
-const Login = ({ onClose = () => {}, switchToSignup = () => {}, onLoginSuccess = () => {} }) => {
+const Login = ({ onLoginSuccess = () => {} }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,48 +15,91 @@ const Login = ({ onClose = () => {}, switchToSignup = () => {}, onLoginSuccess =
 
     try {
       const res = await login(email, password);
-      localStorage.setItem("token", res.access_token); // <-- save token
+      localStorage.setItem("token", res.access_token);
 
-      // Navigate to mediator page
+      // Go to loading page to fetch user data
       navigate("/user-loading");
 
-      // Optional: fetch user data immediately (can also be done in LoadingUserPage)
       const userData = await getMe();
       onLoginSuccess(userData);
-
-      onClose();
     } catch (err) {
       setError(err.response?.data?.detail || "Login failed");
     }
   };
 
   return (
-    <div className="auth-box">
-      <button type="button" className="close-btn" onClick={onClose}>✖</button>
+    <div className="relative w-full h-screen overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 -z-10 bg-black">
+        <Prism
+          animationType="rotate"
+          timeScale={0.5}
+          height={3.5}
+          baseWidth={5.5}
+          scale={4}
+          hueShift={0}
+          colorFrequency={1}
+          noise={0}
+          glow={1}
+        />
+      </div>
 
-      <h2>Sign In</h2>
-      <p className="subtitle">Welcome back! Please sign in to your account.</p>
+      {/* Login Form */}
+      <div className="flex items-center justify-center h-screen p-6 bg-black/20">
+        <div className="bg-black/40 w-full max-w-md rounded-xl shadow-lg p-6 relative backdrop-blur-sm border border-gray-700">
+          <button
+            onClick={() => navigate("/")}
+            className="absolute top-3 right-3 text-white hover:text-gray-400"
+          >
+            ✕
+          </button>
 
-      {error && <p className="error">{error}</p>}
+          <h2 className="text-2xl font-bold mb-2 text-sky-500">Sign In</h2>
+          <p className="text-gray-300 mb-4">
+            Welcome back! Please sign in to your account.
+          </p>
 
-      <form onSubmit={handleSubmit}>
-        <label>Email</label>
-        <input type="email" placeholder="Enter your email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          {error && (
+            <p className="text-red-400 text-sm mb-3 text-center">{error}</p>
+          )}
 
-        <label>Password</label>
-        <input type="password" placeholder="Enter your password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="px-4 py-2 rounded-lg bg-black/60 text-white border border-gray-600 focus:border-sky-500 outline-none"
+            />
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="px-4 py-2 rounded-lg bg-black/60 text-white border border-gray-600 focus:border-sky-500 outline-none"
+            />
 
-        <button type="submit" className="auth-btn">Sign In</button>
-      </form>
+            <button
+              type="submit"
+              className="w-full bg-sky-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition"
+            >
+              Sign In
+            </button>
+          </form>
 
-      <p className="link">
-        Don’t have an account?{" "}
-        <span className="switch-link" onClick={switchToSignup}>
-          Sign up
-        </span>
-      </p>
-
-      <p className="link small"><a href="#">Forgot your password?</a></p>
+          <p className="text-sm text-center mt-4 text-gray-300">
+            Don’t have an account?{" "}
+            <Link
+              to="/signup"
+              className="text-sky-400 hover:underline"
+            >
+              Sign Up
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

@@ -2,6 +2,7 @@ import { FileText, Image, Link } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import Prism from "../Prism";
 
 export default function Home({ user }) {
   const navigate = useNavigate();
@@ -64,7 +65,21 @@ export default function Home({ user }) {
   }, [user]);
 
   return (
-    <div className="h-screen bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 pt-[80px] px-6 pb-6">
+    <div className="h-screen pt-[100px] px-6 pb-6">
+      <div className="absolute inset-0 -z-10 bg-black">
+        <Prism
+          animationType="rotate"
+          timeScale={0.5}
+          height={3.5}
+          baseWidth={5.5}
+          scale={4}
+          hueShift={0}
+          colorFrequency={1}
+          noise={0}
+          glow={1}
+        />
+      </div>
+
       <div className="flex h-full gap-6">
         {/* Sidebar */}
         <div className="w-1/4 bg-white rounded-2xl shadow flex flex-col h-full overflow-hidden">
@@ -105,26 +120,26 @@ export default function Home({ user }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
             <div
               onClick={() => navigate("/pdf")}
-              className="cursor-pointer bg-white rounded-xl shadow p-6 flex flex-col items-center justify-center hover:shadow-lg transition"
+              className="cursor-pointer bg-black/50 rounded-3xl shadow p-6 flex flex-col items-center justify-center hover:shadow-lg transition"
             >
               <FileText className="w-10 h-10 mb-4 text-indigo-600" />
-              <h2 className="font-semibold">Ask about PDFs</h2>
+              <h2 className="font-semibold text-white">Ask about PDFs</h2>
             </div>
 
             <div
               onClick={() => navigate("/image")}
-              className="cursor-pointer bg-white rounded-xl shadow p-6 flex flex-col items-center justify-center hover:shadow-lg transition"
+              className="cursor-pointer bg-black/50 rounded-3xl shadow p-6 flex flex-col items-center justify-center hover:shadow-lg transition"
             >
               <Image className="w-10 h-10 mb-4 text-pink-600" />
-              <h2 className="font-semibold">Ask about Images</h2>
+              <h2 className="font-semibold text-white">Ask about Images</h2>
             </div>
 
             <div
               onClick={() => navigate("/website")}
-              className="cursor-pointer bg-white rounded-xl shadow p-6 flex flex-col items-center justify-center hover:shadow-lg transition"
+              className="cursor-pointer bg-black/50 rounded-3xl shadow p-6 flex flex-col items-center justify-center hover:shadow-lg transition"
             >
               <Link className="w-10 h-10 mb-4 text-green-600" />
-              <h2 className="font-semibold">Ask about Websites</h2>
+              <h2 className="font-semibold text-white">Ask about Websites</h2>
             </div>
           </div>
         </div>

@@ -1,7 +1,8 @@
-import { FileText } from "lucide-react";
+import { FileText, Link } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import Prism from '../Prism';
 
 export default function PDFPage() {
   const navigate = useNavigate();
@@ -10,15 +11,10 @@ export default function PDFPage() {
   const [done, setDone] = useState(false);
   const [message, setMessage] = useState("");
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
+  const handleFileChange = (e) => setFile(e.target.files[0]);
 
   const handleSubmit = async () => {
-    if (!file) {
-      alert("Please select a PDF first.");
-      return;
-    }
+    if (!file) return alert("Please select a PDF first.");
 
     setLoading(true);
     setMessage("Model is training on your PDF...");
@@ -38,69 +34,83 @@ export default function PDFPage() {
       setLoading(false);
       setMessage(`PDF processed successfully! Chunks: ${response.data.chunks}`);
       setDone(true);
-      
-      navigate("/chat", {
-        state: {
-          pdfName: file?.name,
-          documentId: response.data.document_id
-        }
-      });
 
+      navigate("/chat", {
+        state: { pdfName: file?.name, documentId: response.data.document_id },
+      });
     } catch (error) {
       setLoading(false);
       setMessage("Error processing PDF: " + (error?.response?.data?.detail || error.message));
     }
   };
 
-
   const goHome = () => navigate("/home");
-  const goChat = () => navigate("/chat", { state: { pdfName: file?.name } });
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 p-6 pt-[80px]">
-      <div className="bg-white rounded-xl shadow p-6 w-full max-w-md flex flex-col gap-4">
-        <h2 className="font-bold mb-4 text-center text-lg">Upload a PDF</h2>
+    <div className="relative w-full h-screen overflow-hidden">
+      <div className="absolute inset-0 -z-10 bg-black">
+        <Prism
+          animationType="rotate"
+          timeScale={0.5}
+          height={3.5}
+          baseWidth={5.5}
+          scale={4.5}
+          hueShift={0}
+          colorFrequency={1}
+          noise={0}
+          glow={1}
+        />
+      </div>
 
-        {/* Custom file input */}
-        <label className="w-full flex items-center justify-center bg-indigo-500 text-white py-2 rounded-lg cursor-pointer hover:bg-indigo-600 transition">
-          <FileText className="w-4 h-4 mr-2 text-white" />
-          <span className="text-white">
-            {file ? file.name : "Choose PDF"}
-          </span>
-          <input type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
-        </label>
+      <div className="flex items-center justify-center h-screen p-6">
+        <div className="bg-black/50 rounded-3xl shadow p-6 w-full max-w-md flex flex-col gap-4">
+          <h2 className="font-bold mb-4 text-center text-lg text-white">
+            Upload or Link a PDF
+          </h2>
 
-        {!done && (
+          {/* Upload PDF Button */}
+          <label className="w-full flex items-center justify-center bg-sky-600 text-white py-2 rounded-lg mb-4 hover:bg-blue-600 cursor-pointer transition">
+            <FileText className="w-4 h-4 mr-2" />
+            <span>{file ? file.name : "Upload PDF"}</span>
+            <input type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
+          </label>
+
+          {/* Submit button */}
+          {!done && (
+            <button
+              onClick={handleSubmit}
+              className="w-full flex items-center justify-center bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
+              disabled={loading}
+            >
+              {loading ? "Processing..." : "Submit"}
+            </button>
+          )}
+
+          {/* Status Message */}
+          {message && (
+            <div className="bg-gray-100 p-3 rounded-lg text-center text-gray-700">
+              {message}
+            </div>
+          )}
+
+          {/* Chat Now button */}
+          {done && (
+            <button
+              onClick={() => navigate("/chat", { state: { pdfName: file?.name } })}
+              className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
+            >
+              Chat Now
+            </button>
+          )}
+
+          {/* Back/Home button */}
           <button
-            onClick={handleSubmit}
-            className="w-full flex items-center justify-center bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition mt-2"
-            disabled={loading}
+            onClick={goHome}
+            className="w-full mt-2 text-white border border-sky-600 px-4 py-2 rounded-lg hover:bg-sky-700 transition"
           >
-            {loading ? "Processing..." : "Submit"}
+            Back
           </button>
-        )}
-
-        {message && (
-          <div className="bg-gray-100 p-3 rounded-lg text-center text-gray-700">
-            {message}
-          </div>
-        )}
-
-        {done && (
-          <button
-            onClick={goChat}
-            className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition mt-2"
-          >
-            Chat Now
-          </button>
-        )}
-
-        <button
-          onClick={goHome}
-          className="w-full border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition mt-2"
-        >
-          Go to Home Page
-        </button>
+        </div>
       </div>
     </div>
   );

@@ -82,8 +82,8 @@ export default function Home({ user }) {
 
       <div className="flex h-full gap-6">
         {/* Sidebar */}
-        <div className="w-1/4 bg-white rounded-2xl shadow flex flex-col h-full overflow-hidden">
-          <div className="p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+        <div className="w-1/4 bg-black/50 rounded-3xl shadow flex flex-col h-full overflow-hidden">
+          <div className="p-4 border-b border-gray-500 sticky top-0 text-blue-500 z-10 text-center">
             <h2 className="font-bold text-lg">Chat History</h2>
           </div>
 
@@ -99,9 +99,9 @@ export default function Home({ user }) {
                 <div
                   key={chat._id}
                   onClick={() => navigate(`/chat-history/${chat._id}`)}
-                  className="cursor-pointer bg-gray-100 p-3 rounded-lg hover:bg-gray-200 transition flex flex-col"
+                  className="cursor-pointer bg-black/50 p-3 rounded-lg border hover:border-x-purple-500 hover:border-y-blue-500 transition flex flex-col"
                 >
-                  <p className="font-medium text-gray-700 truncate">
+                  <p className="font-medium text-white truncate">
                     {chat.title}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">

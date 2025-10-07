@@ -3,3 +3,4 @@ backend/.env
 backend/test_mongo.py
 *.pyc
 __pycache__/
+*.DS_Store

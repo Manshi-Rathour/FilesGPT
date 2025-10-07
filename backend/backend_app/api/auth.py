@@ -119,9 +119,6 @@ async def update_me(
 # ---- Delete account ----
 @router.delete("/me", status_code=204)
 async def delete_me(current_user: dict = Depends(get_current_user)):
-    from bson import ObjectId
-    from fastapi import Response
-
     # Ensure user_id is ObjectId
     user_id = current_user["_id"]
     if not isinstance(user_id, ObjectId):

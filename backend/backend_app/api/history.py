@@ -19,6 +19,7 @@ class ChatHistory(BaseModel):
     user_id: str
     email: Optional[str] = None
     pdf_name: Optional[str] = None
+    document_id: Optional[str] = None  # <-- added
     messages: List[Message] = []
     created_at: str
 
@@ -59,9 +60,9 @@ async def get_user_chats(user_id: str, limit: int = 50):
                 "user_id": str(d["user_id"]),
                 "email": d.get("email", ""),
                 "pdf_name": d.get("pdf_name", ""),
+                "document_id": str(d.get("document_id")) if d.get("document_id") else None,  # <-- added
                 "messages": d.get("messages", []),
-                "created_at": d["created_at"].isoformat() if isinstance(d.get("created_at"), datetime) else str(
-                    d.get("created_at", ""))
+                "created_at": d["created_at"].isoformat() if isinstance(d.get("created_at"), datetime) else str(d.get("created_at", ""))
             })
 
         print("[DEBUG] Normalized docs before return:", normalized)
@@ -92,6 +93,7 @@ async def get_chat(chat_id: str):
             "user_id": str(doc.get("user_id", "")),
             "email": doc.get("email", ""),
             "pdf_name": doc.get("pdf_name", ""),
+            "document_id": str(doc.get("document_id")) if doc.get("document_id") else None,
             "messages": doc.get("messages", []),
             "created_at": doc.get("created_at").isoformat() if isinstance(doc.get("created_at"), datetime) else str(doc.get("created_at", ""))
         }

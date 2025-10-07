@@ -44,11 +44,13 @@ export default function Home({ user }) {
             _id: chat._id,
             user_id: chat.user_id,
             pdf_name: chat.pdf_name,
+            document_id: chat.document_id,
             messages: chat.messages || [],
             created_at: chat.created_at,
             title: chat.pdf_name || (chat.messages?.[0]?.text?.substring(0, 30) + "...")
           };
         });
+
         console.log("✅ All normalized chats:", chats);
 
 

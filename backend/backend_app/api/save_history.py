@@ -8,7 +8,6 @@ from ..core.auth import get_current_user
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
-# Mongo client
 _mongo_client = None
 def get_mongo_client():
     global _mongo_client
@@ -19,7 +18,8 @@ def get_mongo_client():
 # Request model
 class SaveHistoryRequest(BaseModel):
     pdf_name: str
-    messages: list  # list of {sender, text}
+    document_id: str               # ✅ add this
+    messages: list                 # list of {sender, text}
 
 @router.post("/save/")
 async def save_chat_history(
@@ -27,7 +27,7 @@ async def save_chat_history(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Save chat messages to MongoDB, storing user_id as ObjectId.
+    Save chat messages to MongoDB, linking each chat to uploaded PDF by document_id.
     """
     try:
         client = get_mongo_client()
@@ -35,9 +35,10 @@ async def save_chat_history(
         history_col = db["history"]
 
         history_doc = {
-            "user_id": ObjectId(current_user["_id"]),  # store as ObjectId
+            "user_id": ObjectId(current_user["_id"]),
             "email": current_user["email"],
             "pdf_name": request.pdf_name,
+            "document_id": ObjectId(request.document_id),
             "messages": request.messages,
             "created_at": datetime.utcnow()
         }
@@ -46,7 +47,7 @@ async def save_chat_history(
 
         return {
             "status": "success",
-            "message": "Chat history saved",
+            "message": "Chat history saved and linked to PDF",
             "chat_id": str(result.inserted_id)
         }
 

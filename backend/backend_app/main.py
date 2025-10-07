@@ -5,8 +5,8 @@ from .core.config import settings
 from .api.auth import router as auth_router
 from .api.pdf import router as pdf_router
 from .api.query import router as query_router
-from .api.history import router as history_router          # for viewing history
-from .api.save_history import router as save_history_router  # ✅ for saving history
+from .api.history import router as history_router
+from .api.save_history import router as save_history_router
 
 # Initialize FastAPI app
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -15,7 +15,7 @@ app = FastAPI(title=settings.PROJECT_NAME)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        settings.CLIENT_URL,        # your production frontend URL
+        settings.CLIENT_URL,        # production frontend URL
         "http://localhost:5173",    # local dev frontend
         "http://127.0.0.1:5173",    # sometimes axios uses 127.0.0.1
     ],

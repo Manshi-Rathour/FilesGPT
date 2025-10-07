@@ -1,3 +1,5 @@
 backend/venv/
 backend/.env
 backend/test_mongo.py
+*.pyc
+__pycache__/

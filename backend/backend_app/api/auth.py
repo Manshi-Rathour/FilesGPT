@@ -119,35 +119,51 @@ async def update_me(
 # ---- Delete account ----
 @router.delete("/me", status_code=204)
 async def delete_me(current_user: dict = Depends(get_current_user)):
-    # Ensure user_id is ObjectId
-    user_id = current_user["_id"]
-    if not isinstance(user_id, ObjectId):
-        user_id = ObjectId(user_id)
+    """
+    Completely delete the current user's account and all associated data:
+    - Pinecone vectors
+    - Uploads collection entries
+    - Chat history
+    - User document
+    """
+    from bson import ObjectId
 
-    # Pinecone
+    # Ensure user_id is ObjectId
+    user_id = current_user.get("_id")
+    if not isinstance(user_id, ObjectId):
+        try:
+            user_id = ObjectId(user_id)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid user ID format.")
+
+    # --- Delete from Pinecone ---
     try:
         index.delete(delete_all=False, filter={"user_id": str(user_id)})
+        print(f"Pinecone vectors deleted for user {user_id}")
     except Exception as e:
-        print("Pinecone delete warning:", e)
+        print(f"Pinecone delete warning for user {user_id}: {e}")
 
-    # Delete uploads
+    # --- Delete uploads ---
     try:
         up_col = uploads_col()
-        await up_col.delete_many({"user_id": str(user_id)})
+        res_up = await up_col.delete_many({"user_id": user_id})
+        print(f"Deleted {res_up.deleted_count} uploads for user {user_id}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete uploads: {e}")
 
-    # Delete chat history
+    # --- Delete chat history ---
     try:
         hist_col = history_col()
-        await hist_col.delete_many({"user_id": user_id})
+        res_hist = await hist_col.delete_many({"user_id": user_id})
+        print(f"Deleted {res_hist.deleted_count} history records for user {user_id}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete history: {e}")
 
-    # Delete user document
+    # --- Delete user document ---
     try:
         usr_col = users_col()
-        await usr_col.delete_one({"_id": user_id})
+        res_user = await usr_col.delete_one({"_id": user_id})
+        print(f"Deleted user document count: {res_user.deleted_count}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete user: {e}")
 

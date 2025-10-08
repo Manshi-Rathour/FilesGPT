@@ -124,7 +124,7 @@ const Signup = ({ onSignupSuccess = () => { } }) => {
 
             <button
               type="submit"
-              className="w-full bg-sky-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition"
+              className="w-full bg-sky-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-600 transition cursor-pointer"
             >
               Create Account
             </button>

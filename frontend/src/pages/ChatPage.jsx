@@ -113,7 +113,7 @@ export default function ChatPage() {
             onClick={handleSend}
             className={`px-6 py-2 rounded-xl text-white transition ${loading
                 ? "bg-gray-400 cursor-not-allowed"
-                : "bg-indigo-500 hover:bg-indigo-600"
+                : "bg-indigo-500 hover:bg-indigo-600 cursor-pointer"
               }`}
             disabled={loading}
           >
@@ -124,7 +124,7 @@ export default function ChatPage() {
         {/* Go Home Button */}
         <button
           onClick={saveAndGoHome}
-          className="mt-4 w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition"
+          className="mt-4 w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition cursor-pointer"
         >
           Go to Home Page
         </button>

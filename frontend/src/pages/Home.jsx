@@ -1,4 +1,4 @@
-import { FileText, Image, Link } from "lucide-react";
+import { FileText, Image, Link, MoreHorizontal, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -9,65 +9,58 @@ export default function Home({ user }) {
   const [chatHistory, setChatHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [openMenu, setOpenMenu] = useState(null);
 
+  const api = axios.create({ baseURL: "http://127.0.0.1:5000" });
+
+  // Fetch chat history
   useEffect(() => {
     if (!user?._id) return;
-
     const fetchChatHistory = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) throw new Error("No token found");
-
-        const response = await axios.get(
-          `http://127.0.0.1:5000/history/user/${user._id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        console.log("RAW RESPONSE from backend:", response.data);
-
-        if (!Array.isArray(response.data)) {
-          throw new Error("Unexpected response format, expected array");
-        }
-
-        // Check keys in first object
-        if (response.data.length > 0) {
-          console.log(
-            "Keys in first chat object:",
-            Object.keys(response.data[0])
-          );
-        }
-
-        // Normalize backend data
-        const chats = response.data.map(chat => {
-          console.log("Keys in first chat object:", Object.keys(chat));
-          return {
-            _id: chat._id,
-            user_id: chat.user_id,
-            pdf_name: chat.pdf_name,
-            document_id: chat.document_id,
-            messages: chat.messages || [],
-            created_at: chat.created_at,
-            title: chat.pdf_name || (chat.messages?.[0]?.text?.substring(0, 30) + "...")
-          };
+        const response = await api.get(`/history/user/${user._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        console.log("✅ All normalized chats:", chats);
-
-
-        setChatHistory(chats);
-        setLoading(false);
+        setChatHistory(response.data);
       } catch (err) {
-        console.error("[ERROR] Failed to fetch chat history:", err);
+        console.error("Error fetching chat history:", err);
         setError("Failed to fetch chat history");
+      } finally {
         setLoading(false);
       }
     };
-
     fetchChatHistory();
   }, [user]);
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenu(null);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  // Delete chat
+  const handleDeleteChat = async (chatId) => {
+    if (!window.confirm("Delete this chat permanently?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await api.delete(`/history/${chatId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setChatHistory((prev) => prev.filter((c) => c._id !== chatId));
+      setOpenMenu(null);
+      alert("Chat deleted successfully!");
+    } catch (err) {
+      console.error("Delete error:", err.response || err);
+      alert("Failed to delete chat. Check console for details.");
+    }
+  };
+
   return (
     <div className="h-screen pt-[100px] px-6 pb-6">
+      {/* Background */}
       <div className="absolute inset-0 -z-10 bg-black">
         <Prism
           animationType="rotate"
@@ -100,24 +93,56 @@ export default function Home({ user }) {
               chatHistory.map((chat) => (
                 <div
                   key={chat._id}
-                  onClick={() => navigate(`/chat-history/${chat._id}`)}
-                  className="cursor-pointer bg-black/50 p-3 rounded-lg border hover:border-x-purple-500 hover:border-y-blue-500 transition flex flex-col"
+                  className="relative group bg-black/50 p-3 rounded-lg border hover:border-x-purple-500 hover:border-y-blue-500 transition"
                 >
-                  <p className="font-medium text-white truncate">
-                    {chat.title}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {chat.created_at
-                      ? new Date(chat.created_at).toLocaleString()
-                      : "Unknown date"}
-                  </p>
+                  {/* Chat Entry */}
+                  <div
+                    onClick={() => navigate(`/chat-history/${chat._id}`)}
+                    className="cursor-pointer flex flex-col pr-6"
+                  >
+                    <p className="font-medium text-white truncate">
+                      {chat.pdf_name || "Untitled Chat"}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {chat.created_at
+                        ? new Date(chat.created_at).toLocaleString()
+                        : "Unknown date"}
+                    </p>
+                  </div>
+
+                  {/* 3-dot menu */}
+                  <div className="absolute top-2 right-2 z-50">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenu(openMenu === chat._id ? null : chat._id);
+                      }}
+                      className="text-gray-400 hover:text-white transition cursor-pointer"
+                    >
+                      <MoreHorizontal size={16} />
+                    </button>
+
+                    {openMenu === chat._id && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 mt-2 w-28 bg-gray-900 text-white rounded-md shadow-lg origin-top-right animate-dropdown"
+                      >
+                        <button
+                          onClick={() => handleDeleteChat(chat._id)}
+                          className="flex items-center w-full px-3 py-2 text-sm hover:bg-red-600 rounded-md cursor-pointer"
+                        >
+                          <Trash2 size={14} className="mr-2" /> Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))
             )}
           </div>
         </div>
 
-        {/* Main */}
+        {/* Main Section */}
         <div className="flex-1 flex items-center justify-center">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
             <div
@@ -146,6 +171,19 @@ export default function Home({ user }) {
           </div>
         </div>
       </div>
+
+      {/* Tailwind animation */}
+      <style>
+        {`
+          @keyframes dropdown {
+            0% { opacity: 0; transform: translateY(-5px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+          .animate-dropdown {
+            animation: dropdown 0.15s ease-out forwards;
+          }
+        `}
+      </style>
     </div>
   );
 }

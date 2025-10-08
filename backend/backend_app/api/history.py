@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pymongo import MongoClient
 from typing import List, Optional
 from datetime import datetime
@@ -6,8 +6,13 @@ from bson import ObjectId
 from pydantic import BaseModel, Field
 from ..core.config import settings
 import traceback
+from pinecone import Pinecone
 
 router = APIRouter(prefix="/history", tags=["History"])
+
+# ---------- Pinecone Setup ----------
+pc = Pinecone(api_key=settings.PINECONE_API_KEY)
+index = pc.Index(settings.PINECONE_INDEX)
 
 # ---------- Schemas ----------
 class Message(BaseModel):
@@ -19,7 +24,7 @@ class ChatHistory(BaseModel):
     user_id: str
     email: Optional[str] = None
     pdf_name: Optional[str] = None
-    document_id: Optional[str] = None  # <-- added
+    document_id: Optional[str] = None
     messages: List[Message] = []
     created_at: str
 
@@ -52,7 +57,6 @@ async def get_user_chats(user_id: str, limit: int = 50):
             .limit(limit)
         )
 
-        # Normalize for frontend
         normalized = []
         for d in docs:
             normalized.append({
@@ -60,12 +64,11 @@ async def get_user_chats(user_id: str, limit: int = 50):
                 "user_id": str(d["user_id"]),
                 "email": d.get("email", ""),
                 "pdf_name": d.get("pdf_name", ""),
-                "document_id": str(d.get("document_id")) if d.get("document_id") else None,  # <-- added
+                "document_id": str(d.get("document_id")) if d.get("document_id") else None,
                 "messages": d.get("messages", []),
                 "created_at": d["created_at"].isoformat() if isinstance(d.get("created_at"), datetime) else str(d.get("created_at", ""))
             })
 
-        print("[DEBUG] Normalized docs before return:", normalized)
         return normalized
 
     except Exception:
@@ -73,8 +76,14 @@ async def get_user_chats(user_id: str, limit: int = 50):
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
-@router.get("/{chat_id}", response_model=ChatHistory)
-async def get_chat(chat_id: str):
+@router.delete("/{chat_id}", status_code=204)
+async def delete_chat(chat_id: str):
+    """
+    Delete a single chat and all associated records from:
+    - history collection
+    - uploads collection
+    - Pinecone index
+    """
     try:
         if not ObjectId.is_valid(chat_id):
             raise HTTPException(status_code=400, detail="Invalid chat ID")
@@ -82,27 +91,34 @@ async def get_chat(chat_id: str):
         client = get_mongo_client()
         db = client[settings.MONGO_DB_NAME]
         history_col = db["history"]
+        uploads_col = db["uploads"]
 
-        doc = history_col.find_one({"_id": ObjectId(chat_id)})
-        if not doc:
+        # Find chat record
+        chat = history_col.find_one({"_id": ObjectId(chat_id)})
+        if not chat:
             raise HTTPException(status_code=404, detail="Chat not found")
 
-        # Normalize single chat for frontend
-        normalized = {
-            "_id": str(doc["_id"]),
-            "user_id": str(doc.get("user_id", "")),
-            "email": doc.get("email", ""),
-            "pdf_name": doc.get("pdf_name", ""),
-            "document_id": str(doc.get("document_id")) if doc.get("document_id") else None,
-            "messages": doc.get("messages", []),
-            "created_at": doc.get("created_at").isoformat() if isinstance(doc.get("created_at"), datetime) else str(doc.get("created_at", ""))
-        }
+        user_id = str(chat.get("user_id"))
+        document_id = str(chat.get("document_id"))
 
-        print("[DEBUG] Normalized single chat:", normalized)
-        return normalized
+        # Delete from Pinecone
+        try:
+            index.delete(delete_all=False, filter={"user_id": user_id, "document_id": document_id})
+            print(f"[INFO] Deleted Pinecone vectors for doc {document_id}")
+        except Exception as e:
+            print(f"[WARN] Pinecone deletion failed: {e}")
+
+        # Delete from uploads collection
+        uploads_col.delete_one({"_id": ObjectId(document_id)})
+
+        # Delete from history collection
+        history_col.delete_one({"_id": ObjectId(chat_id)})
+
+        print(f"[INFO] Deleted chat {chat_id}, document {document_id}, user {user_id}")
+        return {"message": "Chat deleted successfully"}
 
     except HTTPException:
         raise
     except Exception:
-        print("[ERROR] Exception in get_chat:", traceback.format_exc())
+        print("[ERROR] Exception in delete_chat:", traceback.format_exc())
         raise HTTPException(status_code=500, detail="Internal Server Error")

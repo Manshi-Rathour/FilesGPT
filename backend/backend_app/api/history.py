@@ -57,6 +57,7 @@ async def get_user_chats(user_id: str, limit: int = 50):
             .limit(limit)
         )
 
+        # Normalize for frontend
         normalized = []
         for d in docs:
             normalized.append({
@@ -64,15 +65,51 @@ async def get_user_chats(user_id: str, limit: int = 50):
                 "user_id": str(d["user_id"]),
                 "email": d.get("email", ""),
                 "pdf_name": d.get("pdf_name", ""),
-                "document_id": str(d.get("document_id")) if d.get("document_id") else None,
+                "document_id": str(d.get("document_id")) if d.get("document_id") else None,  # <-- added
                 "messages": d.get("messages", []),
                 "created_at": d["created_at"].isoformat() if isinstance(d.get("created_at"), datetime) else str(d.get("created_at", ""))
             })
 
+        print("[DEBUG] Normalized docs before return:", normalized)
         return normalized
 
     except Exception:
         print("[ERROR] Exception in get_user_chats:", traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+@router.get("/{chat_id}", response_model=ChatHistory)
+async def get_chat(chat_id: str):
+    try:
+        if not ObjectId.is_valid(chat_id):
+            raise HTTPException(status_code=400, detail="Invalid chat ID")
+
+        client = get_mongo_client()
+        db = client[settings.MONGO_DB_NAME]
+        history_col = db["history"]
+
+        doc = history_col.find_one({"_id": ObjectId(chat_id)})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Chat not found")
+
+        # Normalize single chat for frontend
+        normalized = {
+            "_id": str(doc["_id"]),
+            "user_id": str(doc.get("user_id", "")),
+            "email": doc.get("email", ""),
+            "pdf_name": doc.get("pdf_name", ""),
+            "document_id": str(doc.get("document_id")) if doc.get("document_id") else None,
+            "messages": doc.get("messages", []),
+            "created_at": doc.get("created_at").isoformat() if isinstance(doc.get("created_at"), datetime) else str(doc.get("created_at", ""))
+        }
+
+        print("[DEBUG] Normalized single chat:", normalized)
+        return normalized
+
+    except HTTPException:
+        raise
+    except Exception:
+        print("[ERROR] Exception in get_chat:", traceback.format_exc())
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 

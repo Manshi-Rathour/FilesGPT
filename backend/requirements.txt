@@ -45,6 +45,13 @@ beautifulsoup4
 lxml
 
 
+# ------ Image Processing ------
+
+pytesseract
+pdf2image
+Pillow
+
+
 # ------ Utilities ------
 
 python-dotenv

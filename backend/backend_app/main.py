@@ -7,6 +7,7 @@ from .api.pdf import router as pdf_router
 from .api.query import router as query_router
 from .api.history import router as history_router
 from .api.save_history import router as save_history_router
+from .api.image import router as image_router
 
 # Initialize FastAPI app
 app = FastAPI(title=settings.PROJECT_NAME)
@@ -31,6 +32,7 @@ app.include_router(pdf_router)
 app.include_router(query_router)
 app.include_router(history_router)         # GET /history endpoints
 app.include_router(save_history_router)    # POST /chat/save/ endpoint
+app.include_router(image_router)
 
 # Health check endpoint
 @app.get("/health")

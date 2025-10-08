@@ -1,4 +1,4 @@
-import { Image } from "lucide-react";
+import { Image, FileText } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -14,10 +14,10 @@ export default function ImagePage() {
   const handleFileChange = (e) => setFile(e.target.files[0]);
 
   const handleSubmit = async () => {
-    if (!file) return alert("Please select an image first.");
+    if (!file) return alert("Please select an image or PDF first.");
 
     setLoading(true);
-    setMessage("Uploading your image...");
+    setMessage("Uploading your file...");
 
     try {
       const formData = new FormData();
@@ -32,17 +32,23 @@ export default function ImagePage() {
       });
 
       setLoading(false);
-      setMessage("Image uploaded successfully!");
+      setMessage("File uploaded successfully!");
       setDone(true);
 
-      navigate("/chat", { state: { imageName: file?.name, imageId: response.data.image_id } });
+      navigate("/chat", { state: { 
+        fileName: file?.name, 
+        fileId: response.data.document_id // updated to match backend
+      }});
     } catch (error) {
       setLoading(false);
-      setMessage("Error uploading image: " + (error?.response?.data?.detail || error.message));
+      setMessage("Error uploading file: " + (error?.response?.data?.detail || error.message));
     }
   };
 
   const goBack = () => navigate("/home");
+
+  // Determine icon based on file type
+  const fileIcon = file?.name?.endsWith(".pdf") ? <FileText className="w-4 h-4 mr-2" /> : <Image className="w-4 h-4 mr-2" />;
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
@@ -62,13 +68,13 @@ export default function ImagePage() {
 
       <div className="flex items-center justify-center h-screen p-6">
         <div className="bg-black/50 rounded-3xl shadow p-6 w-full max-w-md flex flex-col gap-4">
-          <h2 className="font-bold mb-4 text-white text-center text-lg">Upload an Image</h2>
+          <h2 className="font-bold mb-4 text-white text-center text-lg">Upload an Image or PDF</h2>
 
           {/* File Upload Button */}
           <label className="w-full flex items-center justify-center bg-pink-500 text-white py-2 rounded-lg cursor-pointer hover:bg-pink-600 transition mb-3.5">
-            <Image className="w-4 h-4 mr-2" />
-            <span>{file ? file.name : "Choose Image"}</span>
-            <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+            {fileIcon}
+            <span>{file ? file.name : "Choose File"}</span>
+            <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleFileChange} />
           </label>
 
           {/* Submit Button */}
@@ -92,7 +98,7 @@ export default function ImagePage() {
           {/* Chat Now Button */}
           {done && (
             <button
-              onClick={() => navigate("/chat", { state: { imageName: file?.name } })}
+              onClick={() => navigate("/chat", { state: { fileName: file?.name } })}
               className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
             >
               Chat Now

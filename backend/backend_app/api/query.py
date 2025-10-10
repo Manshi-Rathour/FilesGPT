@@ -28,7 +28,7 @@ class QueryResponse(BaseModel):
 
 def call_openai_chat(system_prompt: str, user_prompt: str) -> str:
     messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}]
-    resp = openai.chat.completions.create(model="gpt-3.5-turbo", messages=messages, temperature=0.0, max_tokens=800)
+    resp = openai.chat.completions.create(model="gpt-4o-mini", messages=messages, temperature=0.0, max_tokens=800)
     return resp.choices[0].message.content.strip()
 
 @router.post("/", response_model=QueryResponse)

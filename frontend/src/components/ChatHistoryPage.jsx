@@ -59,7 +59,7 @@ export default function ChatHistoryPage() {
       {/* Go Home Button */}
       <button
         onClick={() => navigate("/home")}
-        className="mt-4 w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition"
+        className="mt-4 w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition cursor-pointer"
       >
         Go to Home Page
       </button>

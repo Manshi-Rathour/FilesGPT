@@ -1,22 +1,67 @@
 import { Link } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Prism from '../Prism';
+import Prism from "../Prism";
+import axios from "axios";
 
 export default function WebsitePage() {
   const navigate = useNavigate();
   const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+  const [message, setMessage] = useState("");
+  const [documentId, setDocumentId] = useState(null);
 
-  const handleSubmit = () => {
-    if (!url) return alert("Please enter a website URL.");
-    navigate("/chat", { state: { websiteUrl: url } });
+  const handleSubmit = async () => {
+    if (!url.trim()) {
+      alert("Please enter a website URL.");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("Model is training on your website...");
+    setDone(false);
+
+    try {
+      const formData = new FormData();
+      formData.append("url", url);
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Session expired or not authenticated. Please log in again.");
+        navigate("/login");
+        return;
+      }
+
+      const response = await axios.post("http://127.0.0.1:5000/website/upload/", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setLoading(false);
+      setMessage(`Website processed successfully! Chunks: ${response.data.chunks}`);
+      setDocumentId(response.data.document_id);
+      setDone(true);
+    } catch (error) {
+      setLoading(false);
+      setMessage("Error processing website: " + (error?.response?.data?.detail || error.message));
+    }
   };
 
-  const goBack = () => navigate("/home");
+  const handleChatNow = () => {
+    if (!url || !documentId) {
+      alert("Website not processed yet!");
+      return;
+    }
+    navigate("/chat", { state: { pdfName: url, documentId } });
+  };
+
+  const goHome = () => navigate("/home");
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* Prism Background */}
+      {/* Background Animation */}
       <div className="absolute inset-0 -z-10 bg-black">
         <Prism
           animationType="rotate"
@@ -31,32 +76,53 @@ export default function WebsitePage() {
         />
       </div>
 
-      {/* Centered Card */}
       <div className="flex items-center justify-center h-screen p-6">
         <div className="bg-black/50 rounded-3xl shadow p-6 w-full max-w-md flex flex-col gap-4">
-          <h2 className="font-bold text-white text-center text-lg">Enter Website URL</h2>
+          <h2 className="font-bold mb-4 text-center text-lg text-white">
+            Upload or Link a Website
+          </h2>
 
-          {/* URL Input */}
+          {/* URL Input Field */}
           <input
             type="text"
-            placeholder="Paste website link..."
+            placeholder="Enter website URL..."
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="px-3 py-2 rounded-lg flex-1 bg-black/20 text-white placeholder-gray-300 border border-gray-600 mb-3.5"
+            className="w-full px-3 py-2 rounded-lg bg-black/30 text-white placeholder-gray-400 border border-sky-600 focus:border-green-500 outline-none transition"
           />
 
-          {/* Continue Button */}
-          <button
-            onClick={handleSubmit}
-            className="w-full flex items-center justify-center bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
-          >
-            <Link className="w-4 h-4 mr-2" /> Continue
-          </button>
+          {/* Submit Button */}
+          {!done && (
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full flex items-center justify-center bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition cursor-pointer"
+            >
+              {loading ? "Processing..." : "Submit"}
+            </button>
+          )}
+
+          {/* Status Message */}
+          {message && (
+            <div className="bg-gray-100 p-3 rounded-lg text-center text-gray-700">
+              {message}
+            </div>
+          )}
+
+          {/* Chat Now Button */}
+          {done && (
+            <button
+              onClick={handleChatNow}
+              className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition cursor-pointer"
+            >
+              Chat Now
+            </button>
+          )}
 
           {/* Back Button */}
           <button
-            onClick={goBack}
-            className="w-full mt-2 text-white border border-green-500 px-4 py-2 rounded-lg hover:bg-green-700 transition"
+            onClick={goHome}
+            className="w-full mt-2 text-white border border-sky-600 px-4 py-2 rounded-lg hover:bg-sky-700 transition cursor-pointer"
           >
             Back
           </button>

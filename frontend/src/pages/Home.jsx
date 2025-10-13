@@ -59,7 +59,7 @@ export default function Home({ user }) {
   };
 
   return (
-    <div className="h-screen pt-[100px] px-6 pb-6">
+    <div className="h-screen pt-[100px] px-6 pb-6 relative">
       {/* Background */}
       <div className="absolute inset-0 -z-10 bg-black">
         <Prism

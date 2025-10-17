@@ -59,7 +59,7 @@ const Signup = ({ onSignupSuccess = () => { } }) => {
         <div className="bg-black/40 w-full max-w-md rounded-xl shadow-lg p-6 relative backdrop-blur-sm border border-gray-700">
           <button
             onClick={() => navigate("/")}
-            className="absolute top-3 right-3 text-white hover:text-gray-400"
+            className="absolute top-3 right-3 text-white hover:text-gray-400 text-2xl"
           >
             ✕
           </button>

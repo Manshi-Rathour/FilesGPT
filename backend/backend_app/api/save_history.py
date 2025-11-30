@@ -18,8 +18,8 @@ def get_mongo_client():
 # Request model
 class SaveHistoryRequest(BaseModel):
     pdf_name: str
-    document_id: str               # ✅ add this
-    messages: list                 # list of {sender, text}
+    document_id: str
+    messages: list
 
 @router.post("/save/")
 async def save_chat_history(

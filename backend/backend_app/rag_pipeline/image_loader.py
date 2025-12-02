@@ -18,7 +18,7 @@ if system_name == "Windows":
         )
 
     # Configure Poppler path (required for pdf2image)
-    POPPLER_PATH = r"D:\downloads\Release-25.07.0-0\poppler-25.07.0\Library\bin"  # update if needed
+    POPPLER_PATH = r"D:\downloads\Release-25.07.0-0\poppler-25.07.0\Library\bin"
 else:
     # macOS / Linux (usually already in PATH)
     POPPLER_PATH = None
@@ -32,16 +32,34 @@ def extract_text_from_image_file(file_path: str) -> str:
     """Extract text from a single image file (PNG, JPG, JPEG)."""
     image = Image.open(file_path)
     text = pytesseract.image_to_string(image)
-    return text.strip()
+    text = text.strip()
+
+    print("\n=== Extracted Text ===\n")
+    print(text)
+
+    return text
+
 
 def extract_text_from_pdf_bytes(pdf_bytes: bytes) -> str:
     """Extract text from PDF bytes by converting pages to images first."""
     text = ""
+
     # Pass poppler_path only if set
-    pages = convert_from_bytes(pdf_bytes, poppler_path=POPPLER_PATH) if POPPLER_PATH else convert_from_bytes(pdf_bytes)
+    pages = (
+        convert_from_bytes(pdf_bytes, poppler_path=POPPLER_PATH)
+        if POPPLER_PATH
+        else convert_from_bytes(pdf_bytes)
+    )
+
     for page_num, page in enumerate(pages, start=1):
         temp_path = os.path.join(UPLOAD_DIR, f"temp_page_{page_num}.png")
         page.save(temp_path, "PNG")
         text += extract_text_from_image_file(temp_path) + "\n"
         os.remove(temp_path)
-    return text.strip()
+
+    text = text.strip()
+
+    print("\n=== Extracted Text ===\n")
+    print(text)
+
+    return text

@@ -49,6 +49,8 @@ def extract_text_from_website(url: str) -> str:
                 raise ValueError("No text content found on the page")
 
             print(f"Successfully extracted {len(text)} characters from {url}")
+            print("\n=== Final Extracted Text ===\n")
+            print(text)
             return text.strip()
 
         except requests.exceptions.Timeout:

@@ -52,5 +52,5 @@ async def save_chat_history(
         }
 
     except Exception as e:
-        print("DEBUG - error:", e)
+        print("Error:", e)
         raise HTTPException(status_code=500, detail=str(e))

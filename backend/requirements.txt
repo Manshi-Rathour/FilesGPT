@@ -25,11 +25,8 @@ motor
 pymongo
 pydantic
 
-# ------ OpenAI & AI Helpers ------
+# ------ AI Helpers ------
 
-openai
-langchain
-tiktoken
 sentence-transformers
 
 

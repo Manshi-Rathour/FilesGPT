@@ -1,103 +1,158 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from ..core.config import settings
-from pymongo import MongoClient
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
-import openai
 import torch
+import requests
+import asyncio
+from typing import List
 
 router = APIRouter(prefix="/query", tags=["Query"])
 
-# Device setup and model loading
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
+
+# Device Setup (MPS / CUDA / CPU)
+
+device = (
+    "mps" if torch.backends.mps.is_available()
+    else "cuda" if torch.cuda.is_available()
+    else "cpu"
+)
+
 EMBEDDER_MODEL = "intfloat/e5-large-v2"
 embedder = SentenceTransformer(EMBEDDER_MODEL, device=device)
 
-# Pinecone setup
+
+# Pinecone Setup
+
 pc = Pinecone(api_key=settings.PINECONE_API_KEY)
 index = pc.Index(settings.PINECONE_INDEX)
 
-# OpenAI setup
-openai.api_key = settings.OPENAI_API_KEY
 
 # Request / Response Models
+
 class QueryRequest(BaseModel):
     question: str
     document_id: str
     top_k: int = 5
 
+
 class QueryResponse(BaseModel):
     answer: str
 
-# OpenAI helper
-def call_openai_chat(system_prompt: str, user_prompt: str) -> str:
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt}
-    ]
-    resp = openai.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,
-        temperature=0.0,
-        max_tokens=800
-    )
-    return resp.choices[0].message.content.strip()
 
+
+# Ollama LLM Call
+
+def call_llm_chat(system_prompt: str, user_prompt: str) -> str:
+    try:
+        response = requests.post(
+            f"{settings.OLLAMA_BASE_URL}/api/chat",
+            json={
+                "model": settings.OLLAMA_MODEL,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "options": {
+                    "temperature": 0.0,
+                    "num_predict": 600,
+                    "num_ctx": 8192,
+                },
+                "stream": False,
+            },
+            timeout=180,
+        )
+
+        response.raise_for_status()
+        data = response.json()
+
+        if "message" not in data or "content" not in data["message"]:
+            raise ValueError("Invalid response from Ollama")
+
+        return data["message"]["content"].strip()
+
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"Ollama connection error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ollama error: {str(e)}")
+
+
+
+# Main Query Endpoint
 
 @router.post("/", response_model=QueryResponse)
 async def query_pdf_endpoint(request: QueryRequest):
     try:
-        # Encode the query into vector
-        q_vec = embedder.encode(request.question, convert_to_numpy=True).tolist()
+        if not request.question.strip():
+            raise HTTPException(status_code=400, detail="Question cannot be empty")
 
-        # Query Pinecone for top relevant chunks
+        # IMPORTANT for E5 models
+        formatted_query = f"query: {request.question}"
+
+        # Run embedding in thread (prevents blocking)
+        q_vec = await asyncio.to_thread(
+            embedder.encode,
+            formatted_query,
+            convert_to_numpy=True,
+            normalize_embeddings=True
+        )
+
+        # Query Pinecone
         query_resp = index.query(
-            vector=q_vec,
+            vector=q_vec.tolist(),
             top_k=request.top_k,
             include_metadata=True,
-            filter={"document_id": {"$eq": request.document_id}}
+            filter={"document_id": {"$eq": request.document_id}},
         )
 
         matches = query_resp.get("matches", [])
+
         if not matches:
-            return {"answer": f"No relevant results found for document {request.document_id}."}
+            return {
+                "answer": "No relevant results found for this document."
+            }
 
-        # Collect matched context text
-        contexts = [m["metadata"].get("content", "") for m in matches]
+        # Collect matched context
+        contexts: List[str] = [
+            m["metadata"].get("content", "")
+            for m in matches if m.get("metadata")
+        ]
 
-        # Strong grounding prompt
+        combined_context = "\n\n".join(contexts)
+
         system_prompt = """
-You are a precise and grounded AI assistant that must answer ONLY using the information provided in the given context.
+You are a precise and grounded AI assistant.
+Answer ONLY using the provided context.
 
-- The context may come from PDFs, images (OCR text), Word documents, or website data — but do NOT get confused by mentions of 
-"PDF", "image", "document", or "website" in the question. These are simply sources of the text already included in the context.
-- Never use any external knowledge, assumptions, or general facts outside the provided context.
-- If the context does not contain enough information to answer accurately, respond with:
-  "The provided data does not contain enough information to answer this question."
-
-Guidelines:
-1. Use only the context below to answer.
-2. Do not invent, guess, or elaborate beyond what is explicitly stated.
-3. Be concise and factual.
-4. Ignore duplicate or irrelevant segments in the context.
-
-Your task: Read the context carefully and answer the user's question only if the answer exists within it.
+If the answer is not explicitly present, respond exactly:
+"The provided data does not contain enough information to answer this question."
+Do not explain further.
 """
 
         user_prompt = f"""
 Context:
-{'\n\n'.join(contexts)}
+{combined_context}
 
-Question: {request.question}
+Question:
+{request.question}
 
-Answer strictly using only the above context.
+Answer using only the context above.
 """
 
-        # Call OpenAI to generate answer
-        answer_text = call_openai_chat(system_prompt, user_prompt)
+        # Call Ollama safely
+        answer_text = await asyncio.to_thread(
+            call_llm_chat,
+            system_prompt,
+            user_prompt
+        )
+
+        print(f"Final Answer:")
+        print(answer_text)
 
         return {"answer": answer_text}
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")

@@ -32,8 +32,15 @@ class Settings:
         self.PINECONE_ENV = os.getenv("PINECONE_ENV", "us-east-1")
         self.PINECONE_INDEX = os.getenv("PINECONE_INDEX", "pdfgpt")
 
-        # OpenAI
-        self.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+        # Ollama (Local LLM)
+        self.OLLAMA_BASE_URL = os.getenv(
+            "OLLAMA_BASE_URL",
+            "http://localhost:11434"
+        )
+        self.OLLAMA_MODEL = os.getenv(
+            "OLLAMA_MODEL",
+            "mistral:7b-instruct"
+        )
 
 
 settings = Settings()

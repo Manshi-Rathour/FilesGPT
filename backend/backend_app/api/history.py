@@ -36,7 +36,7 @@ _mongo_client_h = None
 def get_mongo_client():
     global _mongo_client_h
     if _mongo_client_h is None:
-        print("[DEBUG] Initializing MongoDB client...")
+        print("Initializing MongoDB client...")
         _mongo_client_h = MongoClient(settings.MONGO_URI)
     return _mongo_client_h
 
@@ -70,11 +70,11 @@ async def get_user_chats(user_id: str, limit: int = 50):
                 "created_at": d["created_at"].isoformat() if isinstance(d.get("created_at"), datetime) else str(d.get("created_at", ""))
             })
 
-        print("[DEBUG] Normalized docs before return:", normalized)
+        print("Normalized docs before return:", normalized)
         return normalized
 
     except Exception:
-        print("[ERROR] Exception in get_user_chats:", traceback.format_exc())
+        print("Exception in get_user_chats:", traceback.format_exc())
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
@@ -103,13 +103,13 @@ async def get_chat(chat_id: str):
             "created_at": doc.get("created_at").isoformat() if isinstance(doc.get("created_at"), datetime) else str(doc.get("created_at", ""))
         }
 
-        print("[DEBUG] Normalized single chat:", normalized)
+        print("Normalized single chat:", normalized)
         return normalized
 
     except HTTPException:
         raise
     except Exception:
-        print("[ERROR] Exception in get_chat:", traceback.format_exc())
+        print("Exception in get_chat:", traceback.format_exc())
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
@@ -141,9 +141,9 @@ async def delete_chat(chat_id: str):
         # Delete from Pinecone
         try:
             index.delete(delete_all=False, filter={"user_id": user_id, "document_id": document_id})
-            print(f"[INFO] Deleted Pinecone vectors for doc {document_id}")
+            print(f"Deleted Pinecone vectors for doc {document_id}")
         except Exception as e:
-            print(f"[WARN] Pinecone deletion failed: {e}")
+            print(f"Pinecone deletion failed: {e}")
 
         # Delete from uploads collection
         uploads_col.delete_one({"_id": ObjectId(document_id)})
@@ -151,11 +151,11 @@ async def delete_chat(chat_id: str):
         # Delete from history collection
         history_col.delete_one({"_id": ObjectId(chat_id)})
 
-        print(f"[INFO] Deleted chat {chat_id}, document {document_id}, user {user_id}")
+        print(f"Deleted chat {chat_id}, document {document_id}, user {user_id}")
         return {"message": "Chat deleted successfully"}
 
     except HTTPException:
         raise
     except Exception:
-        print("[ERROR] Exception in delete_chat:", traceback.format_exc())
+        print("Exception in delete_chat:", traceback.format_exc())
         raise HTTPException(status_code=500, detail="Internal Server Error")

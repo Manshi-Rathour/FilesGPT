@@ -63,7 +63,7 @@ export default function ChatHistoryPage() {
         />
       </div>
       {/* Chat Box */}
-      <div className="flex-1 bg-black/50 rounded-xl shadow flex flex-col p-4 overflow-y-auto max-h-[70vh]">
+      <div className="flex-1 bg-black/75 rounded-xl shadow flex flex-col p-4 overflow-y-auto max-h-[70vh]">
         <h2 className="font-bold text-white text-xl mb-4">{pdfName}</h2>
         {messages.map((m, idx) => (
           <ChatMessage key={idx} sender={m.sender} text={m.text} />
@@ -74,7 +74,7 @@ export default function ChatHistoryPage() {
       {/* Go Home Button */}
       <button
         onClick={() => navigate("/home")}
-        className="w-full mt-2 text-black bg-black/50 border border-sky-600 px-4 py-2 rounded-lg hover:bg-sky-700 transition cursor-pointer"
+        className="mt-4 w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition cursor-pointer"
       >
         Go to Home Page
       </button>

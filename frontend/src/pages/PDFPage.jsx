@@ -18,7 +18,7 @@ export default function PDFPage() {
     if (!file) return alert("Please select a PDF first.");
 
     setLoading(true);
-    setMessage("Model is training on your PDF...");
+    setMessage("Model is processing your PDF...");
 
     try {
       const formData = new FormData();
@@ -33,7 +33,7 @@ export default function PDFPage() {
       });
 
       setLoading(false);
-      setMessage(`PDF processed successfully! Chunks: ${response.data.chunks}`);
+      setMessage("PDF processed successfully!");
       setDocumentId(response.data.document_id);
       setDone(true);
     } catch (error) {

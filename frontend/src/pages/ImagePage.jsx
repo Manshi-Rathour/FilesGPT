@@ -18,7 +18,7 @@ export default function ImagePage() {
     if (!file) return alert("Please select an image or PDF first.");
 
     setLoading(true);
-    setMessage("Model is training on your file...");
+    setMessage("Model is processing your image file...");
 
     try {
       const formData = new FormData();
@@ -33,7 +33,7 @@ export default function ImagePage() {
       });
 
       setLoading(false);
-      setMessage(`File processed successfully! Chunks: ${response.data.chunks}`);
+      setMessage("Image file processed successfully!");
       setDocumentId(response.data.document_id);
       setDone(true);
     } catch (error) {

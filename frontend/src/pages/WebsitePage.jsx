@@ -19,7 +19,7 @@ export default function WebsitePage() {
     }
 
     setLoading(true);
-    setMessage("Model is training on your website...");
+    setMessage("Model is processing your url...");
     setDone(false);
 
     try {
@@ -40,7 +40,7 @@ export default function WebsitePage() {
       });
 
       setLoading(false);
-      setMessage(`Website processed successfully! Chunks: ${response.data.chunks}`);
+      setMessage("URL processed successfully!");
       setDocumentId(response.data.document_id);
       setDone(true);
     } catch (error) {

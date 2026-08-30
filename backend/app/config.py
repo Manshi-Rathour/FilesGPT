@@ -1,14 +1,22 @@
+import os
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=[str(_REPO_ROOT / ".env"), ".env"],
+        extra="ignore",
+    )
 
     PROJECT_NAME: str = "FilesGPT"
 
     # MongoDB
-    MONGO_URI: str = "mongodb://localhost:27017"
-    MONGO_DB_NAME: str = "filesgpt"
+    MONGO_URI: str = ""
+    MONGO_DB_NAME: str = ""
 
     # JWT
     JWT_SECRET: str = "change-this-secret"
@@ -45,3 +53,11 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Sync loaded credentials back into os.environ so third-party SDKs can find them
+if settings.PINECONE_API_KEY:
+    os.environ["PINECONE_API_KEY"] = settings.PINECONE_API_KEY
+if settings.GROQ_API_KEY:
+    os.environ["GROQ_API_KEY"] = settings.GROQ_API_KEY
+if settings.GOOGLE_API_KEY:
+    os.environ["GOOGLE_API_KEY"] = settings.GOOGLE_API_KEY

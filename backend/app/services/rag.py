@@ -77,6 +77,7 @@ def store(text: str, user_id: str, document_id: str, source: str) -> int:
         embedding=_embeddings(),
         index_name=settings.PINECONE_INDEX,
         namespace=_namespace(user_id, document_id),
+        pinecone_api_key=settings.PINECONE_API_KEY,
     )
     logger.info("Stored %d chunks | doc=%s", len(docs), document_id)
     return len(docs)
@@ -88,6 +89,7 @@ def answer(question: str, user_id: str, document_id: str, history: list[dict]) -
         index=_index(),
         embedding=_embeddings(),
         namespace=_namespace(user_id, document_id),
+        pinecone_api_key=settings.PINECONE_API_KEY,
     )
 
     prompt = ChatPromptTemplate.from_messages(

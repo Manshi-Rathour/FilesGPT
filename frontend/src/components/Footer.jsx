@@ -1,5 +1,5 @@
 import { Github, Linkedin } from "lucide-react";
-import Logo from "../assets/logo.png"; // replace with your logo
+import Logo from "../assets/logo.png";
 
 export default function Footer() {
   return (
@@ -19,7 +19,7 @@ export default function Footer() {
           <h3 className="text-white font-semibold mb-4">Follow Us</h3>
           <div className="flex justify-center md:justify-start gap-4">
             <a
-              href="https://github.com/itsabhyudai"
+              href="https://github.com/Manshi-Rathour"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-sky-500 transition"
@@ -28,7 +28,7 @@ export default function Footer() {
             </a>
 
             <a
-              href="https://www.linkedin.com/in/itsabhyudai/"
+              href="https://www.linkedin.com/in/manshi-rathour/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-400 hover:text-sky-500 transition"

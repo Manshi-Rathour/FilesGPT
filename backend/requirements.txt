@@ -13,6 +13,7 @@ python-jose[cryptography]
 
 # Database
 motor
+certifi  # CA bundle so Atlas (mongodb+srv) TLS verifies on systems with incomplete trust stores
 
 # Retrieval / generation
 langchain-classic
